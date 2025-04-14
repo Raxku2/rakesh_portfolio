@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px rgb(28, 208, 0),
+            0 0 8px rgba(28, 208, 0, 0.553),
+            0 0 10px rgba(28, 208, 0, 0.395);
+    }
+
+    50% {
+        box-shadow: 0 0 8px rgba(28, 208, 0, 0.775),
+            0 0 20px rgba(28, 208, 0, 0.564),
+            0 0 30px rgba(28, 208, 0, 0.395);
+    }
+}
+
+.glowing-div {
+    background-color: #1e90ff;
+    box-shadow: 0 0 20px rgba(34, 255, 0, 0.775),
+    0 0 40px rgba(34, 255, 0, 0.773),
+    0 0 60px rgba(34 , 255, 0, 0.545);
+    animation: glow 2s infinite;
+}
+
+
+:root {
+    --back-color-a: rgba(255, 255, 255, 0.059);
+    --Hover-color: rgba(255, 255, 255, 0.158);
+    --bdrr-a: 20px;
+    --bdrr-b: 10px;
+    --bdrr-c: 8px;
+  }
+  
+  @font-face {
+    font-family: LT;
+    src: url(./assets/Fonts/LTWaveMono-Medium.otf);
+  }
+  
+  @font-face {
+    font-family: LTRegular;
+    src: url(./assets/Fonts/LTWaveAlt-Regular.otf);
+  }
+  
+  @font-face {
+    font-family: LTBold;
+    src: url(./assets/Fonts/LTWaveMono-Bold.otf);
+  }
+  @font-face {
+    font-family: LTB;
+    src: url(./assets/Fonts/LTWaveMono-Black.otf);
+  }
+  @font-face {
+    font-family: Rou;
+    src: url(./assets/Fonts/Simply\ Rounded.ttf);
+  }
+  
+  * {
+    padding: 0;
+    margin: 0;
+  }
+  
+  html {
+    background-color: #000c1c;
+    color: white;
+  }
+  
+  body {
+    padding: 4px;
+  }
+  
+  header,
+  main,
+  footer {
+    margin: 8px;
+  }
+  
+  nav {
+    background-color: var(--back-color-a);
+    border-radius: var(--bdrr-b);
+    padding: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: LTRegular;
+    font-size: 16px;
+  }
+  
+  nav ul {
+    display: flex;
+    justify-content: space-between;
+    list-style-type: none;
+    align-items: center;
+  }
+  
+  nav ul a,
+  .NavItem {
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--bdrr-c);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  nav ul a:hover {
+    background-color: var(--Hover-color);
+  }
+  
+  .NavItem:hover {
+    background-color: var(--Hover-color);
+  
+  }
+  
+  .Name_Page {
+    font-family: LTB;
+  }
+  
+  .sitebody{
+    background-color: var(--back-color-a);
+    padding: 8px;
+    border-radius: var(--bdrr-b);
+    font-size: 16px;
+  }
+  
+  .text{
+    padding: 4px;
+  }
+  
+  .footerContainer,
+  .ContactBody,
+  .PrjBody{
+    background-color: var(--back-color-a);
+    border-radius: var(--bdrr-b);
+  }
+  
