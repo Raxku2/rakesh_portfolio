@@ -63,7 +63,7 @@ export default function Panoroma() {
       amount: order.amount,
       currency: "INR",
       order_id: order.order_id,
-      name: "InnovateArena", // You can update this to your actual app name
+      name: "INNOVATEARENA", // You can update this to your actual app name
       description: "InnovateArena - Payment",
       method: {
         emi: false,
@@ -206,13 +206,6 @@ export default function Panoroma() {
 
   return (
     <div>
-      <button
-        onClick={() => {
-          window.location.href = REDION
-        }}
-      >
-        go back to INNOVATEARENA
-      </button>
       <h1>Status: {appStatus}</h1>
     </div>
   )
