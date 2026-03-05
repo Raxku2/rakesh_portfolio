@@ -3,16 +3,16 @@ import App from './App.jsx'
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DataContext } from './Context/DataContext.js'
-import { Contact, Footer, NavBar, Projects } from './Components'
+import { Contact, Footer, NavBar, Panoroma, Projects } from './Components'
 import { BrowserRouter, Route, Routes } from "react-router"
 import { SkillsList, Name, Bio, BackGroundColor, DisPlayProjects } from './Dependecy/Dpnc.js'
 
 function Main() {
   const [profilePicUrl, setProfilePicUrl] = useState('./DP/dp.jpg')
-  const [Repos,setRepos] = useState([])
+  const [Repos, setRepos] = useState([])
 
   return (
-    <DataContext.Provider value={{ Name, Bio, profilePicUrl, setProfilePicUrl, BackGroundColor, SkillsList, DisPlayProjects,Repos }}>
+    <DataContext.Provider value={{ Name, Bio, profilePicUrl, setProfilePicUrl, BackGroundColor, SkillsList, DisPlayProjects, Repos }}>
       <BrowserRouter >
         <header className='fixed top-0 left-0 right-0 z-50  pl-1 pr-1 '>
           <NavBar />
@@ -23,11 +23,12 @@ function Main() {
             <Route path='/' element={<App />} />
             <Route path='/contact' element={<Contact />} />
             <Route path='/projects' element={<Projects username={"rax-2"} />} />
+            <Route path='/panoroma/:id' element={<Panoroma />} />
           </Routes>
         </main>
 
         <footer >
-          <Footer/>
+          <Footer />
         </footer>
       </BrowserRouter>
     </DataContext.Provider>

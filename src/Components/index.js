@@ -12,4 +12,21 @@ import Footer from "./Footer/Footer";
 import SocialCard from "./SocialCard/SocialCard";
 import GitHubCalendarComponent from "./GithubCal/GithubCal";
 import RepoCard from "./ReoCard/RepoCard";
-export { Aboout, Contact, Info, NavBar, Projects, SkiillMeter, Skills, ProjectCard, ProjectDisplay, Footer, SocialCard , GitHubCalendarComponent, RepoCard}
+import Panoroma from "./pages/Panoroma";
+export {
+    Panoroma,
+    Aboout,
+    
+    Contact,
+    Info,
+    NavBar,
+    Projects,
+    SkiillMeter,
+    Skills,
+    ProjectCard,
+    ProjectDisplay,
+    Footer,
+    SocialCard,
+    GitHubCalendarComponent,
+    RepoCard
+}
