@@ -14,189 +14,168 @@ export default function Panoroma() {
   const [appStatus, setAppStatus] = useState('payment token verifying')
 
   const startRegistrationPayment = async (dataOfToken) => {
+  if (!window.Razorpay) {
+    setAppStatus("Payment gateway failed to load. Refresh page.");
+    return;
+  }
 
-    if (!window.Razorpay) {
-      setAppStatus("Payment gateway failed to load. Refresh page.");
+  try {
+    setAppStatus("Initializing payment...");
+
+    // -----------------------------
+    // 🔹 STEP 1: Create Order
+    // -----------------------------
+    const orderResponse = await fetch(
+      `${BACKEND}/pay/order/${dataOfToken.user_id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: dataOfToken.user_id,
+          team_id: dataOfToken.team_id,
+          username: dataOfToken.username
+        })
+      }
+    );
+
+    if (!orderResponse.ok) {
+      setAppStatus("Server error while creating order. Please try again.");
       return;
     }
 
-    try {
+    const order = await orderResponse.json();
 
-      // -----------------------------
-      // 🔹 STEP 1: Create Order
-      // -----------------------------
-      const orderResponse = await fetch(
-        `${BACKEND}/pay/order/${dataOfToken.user_id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            user_id: dataOfToken.user_id,
-            team_id: dataOfToken.team_id,
-            username: dataOfToken.username
-          })
-        }
-      );
-
-      if (!orderResponse.ok) {
-        setAppStatus("Server error while creating order.");
-        return;
-      }
-
-      const order = await orderResponse.json();
-
-      if (!order || !order.order_id || !order.amount) {
-        setAppStatus("Invalid order response.");
-        return;
-      }
-
-
-      // -----------------------------
-      // 🔹 STEP 2: Razorpay Config
-      // -----------------------------
-      const options = {
-
-        key: RAZOR_KEY,
-        amount: order.amount,
-        currency: "INR",
-        order_id: order.order_id,
-
-        name: "Rakesh Kundu",
-        description: "InnovateArena - Payment",
-
-        method: {
-          emi: false,
-          paylater: false
-        },
-
-        prefill: {
-          name: dataOfToken.username || "",
-          email: dataOfToken.email || "",
-          contact: dataOfToken.phone || ""
-        },
-
-        notes: {
-          team_id: dataOfToken.team_id,
-          user_id: dataOfToken.user_id
-        },
-
-
-        // -----------------------------
-        // 🔹 STEP 3: Payment Success
-        // -----------------------------
-        handler: async function (response) {
-
-          try {
-
-            if (
-              !response.razorpay_payment_id ||
-              !response.razorpay_order_id ||
-              !response.razorpay_signature
-            ) {
-              setAppStatus("Payment response invalid.");
-              return;
-            }
-
-            const verifyResponse = await fetch(
-              `${BACKEND}/pay/verify`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                  user_id: dataOfToken.user_id,
-                  team_id: dataOfToken.team_id,
-                  username: dataOfToken.username,
-                  order_id: response.razorpay_order_id,
-                  payment_id: response.razorpay_payment_id,
-                  signature: response.razorpay_signature
-                })
-              }
-            );
-
-            if (!verifyResponse.ok) {
-              setAppStatus("Payment verification failed.");
-              return;
-            }
-
-            const result = await verifyResponse.json();
-
-            if (result && result.success) {
-
-              setAppStatus("Payment successful");
-
-              setTimeout(() => {
-                window.location.href = REDION;
-              }, 1000);
-
-            } else {
-
-              setAppStatus("Payment verification rejected");
-
-            }
-
-          } catch (verifyError) {
-
-            console.error("Verify error:", verifyError);
-            setAppStatus("Payment verification error.");
-
-          }
-        },
-
-
-        // -----------------------------
-        // 🔹 Detect User Closing Payment
-        // -----------------------------
-        modal: {
-          ondismiss: function () {
-            console.log("User closed payment popup");
-            setAppStatus("Payment cancelled");
-            window.location.href = REDION;
-          }
-        },
-
-        theme: {
-          color: "#0f172a"
-        }
-
-      };
-
-
-      const rzp = new Razorpay(options);
-
-
-      // -----------------------------
-      // 🔹 Payment Failure Listener
-      // -----------------------------
-      rzp.on("payment.failed", function (response) {
-
-        console.error("Payment Failed:", response);
-
-        setAppStatus(
-          response.error?.description ||
-          "Payment failed. Try again."
-        );
-
-      });
-
-
-      // -----------------------------
-      // 🔹 Open Razorpay Checkout
-      // -----------------------------
-      rzp.open();
-
-
-    } catch (error) {
-
-      console.error("Payment error:", error);
-      setAppStatus("Unexpected payment error. Try again.");
-
+    if (!order || !order.order_id || !order.amount) {
+      setAppStatus("Invalid order response from server.");
+      return;
     }
 
+    // Flag to prevent the "ondismiss" race condition if a user pays via UPI
+    let isPaymentSuccess = false;
+
+    // -----------------------------
+    // 🔹 STEP 2: Razorpay Config
+    // -----------------------------
+    const options = {
+      key: RAZOR_KEY,
+      amount: order.amount,
+      currency: "INR",
+      order_id: order.order_id,
+      name: "InnovateArena", // You can update this to your actual app name
+      description: "InnovateArena - Payment",
+      method: {
+        emi: false,
+        paylater: false
+      },
+      prefill: {
+        name: dataOfToken.username || "",
+        email: dataOfToken.email || "",
+        contact: dataOfToken.phone || ""
+      },
+      notes: {
+        team_id: dataOfToken.team_id,
+        user_id: dataOfToken.user_id
+      },
+
+      // -----------------------------
+      // 🔹 STEP 3: Payment Success Handler
+      // -----------------------------
+      handler: async function (response) {
+        // Mark as success immediately so the modal 'ondismiss' doesn't fire as a cancellation
+        isPaymentSuccess = true; 
+        setAppStatus("Payment received! Verifying securely...");
+
+        try {
+          if (
+            !response.razorpay_payment_id ||
+            !response.razorpay_order_id ||
+            !response.razorpay_signature
+          ) {
+            setAppStatus("Payment response invalid from gateway.");
+            return;
+          }
+
+          const verifyResponse = await fetch(
+            `${BACKEND}/pay/verify`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                user_id: dataOfToken.user_id,
+                team_id: dataOfToken.team_id,
+                username: dataOfToken.username,
+                order_id: response.razorpay_order_id,
+                payment_id: response.razorpay_payment_id,
+                signature: response.razorpay_signature // MATCHES your updated backend!
+              })
+            }
+          );
+
+          // We parse the JSON because our backend now returns {"success": true}
+          const result = await verifyResponse.json();
+
+          // Check if response is 200 OK AND the JSON success flag is true
+          if (verifyResponse.ok && result.success) {
+            setAppStatus("Payment successful! Redirecting...");
+            
+            setTimeout(() => {
+              window.location.href = REDION;
+            }, 1500); // 1.5 seconds gives the user time to read the success message
+
+          } else {
+            setAppStatus("Payment verification rejected. Contact support.");
+          }
+
+        } catch (verifyError) {
+          console.error("Verify error:", verifyError);
+          setAppStatus("Network error during verification.");
+        }
+      },
+
+      // -----------------------------
+      // 🔹 Detect User Closing Payment
+      // -----------------------------
+      modal: {
+        ondismiss: function () {
+          // ONLY trigger cancellation if a success hasn't already been registered
+          if (!isPaymentSuccess) {
+            console.log("User closed payment popup");
+            setAppStatus("Payment cancelled");
+            // No automatic redirect here, so they can click 'Pay' again if they want
+          }
+        }
+      },
+      theme: {
+        color: "#0f172a"
+      }
+    };
+
+    const rzp = new window.Razorpay(options); // Added window. just to be safe
+
+    // -----------------------------
+    // 🔹 Payment Failure Listener
+    // -----------------------------
+    rzp.on("payment.failed", function (response) {
+      console.error("Payment Failed:", response);
+      setAppStatus(
+        response.error?.description || "Payment failed. Try another method."
+      );
+    });
+
+    // -----------------------------
+    // 🔹 Open Razorpay Checkout
+    // -----------------------------
+    rzp.open();
+
+  } catch (error) {
+    console.error("Payment error:", error);
+    setAppStatus("Unexpected payment error. Please try again.");
   }
+}
 
 
 
